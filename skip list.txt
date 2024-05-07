@@ -1,0 +1,70 @@
+from __future__ import print_function
+import random
+
+class Node(object):
+    def __init__(self, key, level):
+        self.key = key
+        self.forward = [None]*(level+1)
+
+class SkipList(object):
+    def __init__(self, max_lvl, P):
+        self.MAXLVL = max_lvl
+        self.P = P
+        self.header = self.createNode(self.MAXLVL, -1)
+        self.level = 0
+
+    def createNode(self, lvl, key):
+        n = Node(key, lvl)
+        return n
+
+    def randomLevel(self):
+        lvl = 0
+        while random.random() < self.P and lvl < self.MAXLVL:
+            lvl += 1
+        return lvl
+
+    def insertElement(self, key):
+        update = [None]*(self.MAXLVL+1)
+        current = self.header
+        for i in range(self.level, -1, -1):
+            while current.forward[i] and current.forward[i].key < key:
+                current = current.forward[i]
+            update[i] = current
+        current = current.forward[0]
+        if current is None or current.key != key:
+            rlevel = self.randomLevel()
+            if rlevel > self.level:
+                for i in range(self.level+1, rlevel+1):
+                    update[i] = self.header
+                self.level = rlevel
+            n = self.createNode(rlevel, key)
+            for i in range(rlevel+1):
+                n.forward[i] = update[i].forward[i]
+                update[i].forward[i] = n
+            print("Successfully inserted key {}".format(key))
+
+    def displayList(self):
+        print("\n*****Skip List******")
+        head = self.header
+        for lvl in range(self.level+1):
+            print("Level {}: ".format(lvl), end=" ")
+            node = head.forward[lvl]
+            while node is not None:
+                print(node.key, end=" ")
+                node = node.forward[lvl]
+            print("")
+
+def main():
+    max_lvl = int(input("Enter the maximum level for the Skip List: "))
+    P = float(input("Enter the fraction (P) of the nodes with level i references also having level i+1 references: "))
+    lst = SkipList(max_lvl, P)
+
+    while True:
+        key = input("Enter a key to insert (or type 'done' to finish): ")
+        if key.lower() == 'done':
+            break
+        lst.insertElement(int(key))
+    
+    lst.displayList()
+
+main()
